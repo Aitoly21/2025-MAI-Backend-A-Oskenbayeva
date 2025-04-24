@@ -1,7 +1,10 @@
+# Игнорируем виртуальное окружение
 venv/
+#Кэш Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.DS_Store
-.env
+# Файлы IDE
+.idea/
+.vscode/
