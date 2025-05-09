@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: beautyacademy_db
+    environment:
+      POSTGRES_DB: beautyacademy_db
+      POSTGRES_USER: beauty_user
+      POSTGRES_PASSWORD: beauty_pass
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "beauty_user"]
+      interval: 10s
+      retries: 5
+
+  web:
+    build: .
+    container_name: beautyacademy_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DEBUG: "1"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DB_NAME: beautyacademy_db
+      DB_USER: beauty_user
+      DB_PASSWORD: beauty_pass
+      DB_HOST: db
+      DB_PORT: 5432
+
+volumes:
+  pg_data:

@@ -1,12 +1,19 @@
 from django.urls import path
-from .views import (
-    profile_view,
-    courses_list_view,
-    categories_list_view,
-)
+from core import views
 
 urlpatterns = [
-    path('profile/', profile_view, name='profile'),
-    path('courses/', courses_list_view, name='courses'),
-    path('categories/', categories_list_view, name='categories'),
+    # Profile
+    path('profile/', views.profile_list_view),
+    path('profile/create', views.profile_create_view),
+    path('profile/search/', views.profile_search_view),
+
+    # Course
+    path('course/', views.course_list_view),
+    path('course/create', views.course_create_view),
+    path('course/search/', views.course_search_view),
+
+    # Category
+    path('category/', views.category_list_view),
+    path('category/create', views.category_create_view),
+    path('category/search/', views.category_search_view),
 ]

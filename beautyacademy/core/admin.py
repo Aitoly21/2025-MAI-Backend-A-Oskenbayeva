@@ -1,3 +1,8 @@
 from django.contrib import admin
+from core.models import Profile, Category, Course, CourseSchedule, Attendance
 
-# Register your models here.
+admin.site.register(Profile)
+admin.site.register(Category)
+admin.site.register(Course)
+admin.site.register(CourseSchedule)
+
