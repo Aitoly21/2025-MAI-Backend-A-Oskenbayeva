@@ -1,0 +1,321 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{graphicx}
+
+
+
+\geometry{margin=2.5cm}
+\setlength{\parindent}{0pt}
+\linespread{1.2}
+
+\begin{document}
+
+% Титульная страница
+\begin{titlepage}
+\begin{center}
+\bfseries
+{\Large Московский авиационный институт\\
+(национальный исследовательский университет)}
+
+\vspace{48pt}
+{\large Факультет информационных технологий и прикладной математики}
+
+\vspace{36pt}
+{\large Кафедра вычислительной математики и программирования}
+
+\vspace{48pt}
+Курсовой проект по курсу «Программная инженерия»
+
+\end{center}
+
+\vspace{72pt}
+\begin{flushright}
+\begin{tabular}{rl}
+Студент: & А.\,У. Оскенбаева \\
+Преподаватель: & А.\,А. Кухтичев \\
+Группа: & М80-207М-23 \\
+Дата: & \\
+Оценка: & \\
+Подпись: & \\
+\end{tabular}
+\end{flushright}
+
+\vfill
+\begin{center}
+\bfseries
+Москва, \the\year
+\end{center}
+\end{titlepage}
+
+\newpage
+
+% Задание курсового проекта
+\section*{Задание курсового проекта}
+
+\textbf{Задача:} Требуется разработать современное веб-приложение. Основные требования:
+
+\begin{itemize}[leftmargin=1.2cm]
+  \item Поднять веб-сервер (nginx). Отдавать статические файлы (логотип и т.д.) по \texttt{/static/}. Настроить проксирование запросов на сервер-приложение по отдельному URL;
+
+  \item В конфиге nginx создать \texttt{location}, которое будет ходить на Django-приложение;
+
+  \item Поднять сервер-приложение;
+
+  \item Создать базу данных в PostgreSQL; Написать классы-модели, мигрировать;
+
+  \item Организовать приём и передачу сообщений с помощью формата JSON, используя REST;
+
+  \item Реализовать метод API для загрузки файла, использовать для хранения файла облачное S3 хранилище, создать \texttt{location} в Nginx для раздачи загруженных файлов, реализовать обработчик в приложении для проверки прав доступа к файлу;
+
+  \item Реализовать OAuth2-авторизацию для двух любых социальных сетей, навесить декоратор, проверяющий авторизацию при вызовах API;
+
+  \item Покрыть тестами все вьюхи и по желанию другие функции; Написать selenium-тест (найти элемент + клик на элемент); Использовать mock-объект при тестировании; Использовать factory boy; Узнать степень покрытия тестами с помощью библиотеки coverage;
+
+  \item Развернуть и наполнить тестовыми данными Elasticsearch; Реализовать поиск по пользователям, продуктам (сущностям); Реализовать метод API для поиска по указанным сущностям и создать страницу HTML с вёрсткой для поиска и отображения результатов;
+
+  \item Установить и поднять centrifugo; Подключить centrifugo к проекту на стороне клиента и сервера; Организовать отправку/получение сообщений с помощью centrifugo;
+
+  \item Установить docker и docker-compose; Создание Dockerfile для Django-приложения; Создание docker-compose для проекта:
+  \begin{itemize}
+      \item nginx;
+      \item База данных;
+    \end{itemize}  % конец предыдущего списка
+
+\newpage  % ← новая страница начинается прямо перед следующими пунктами
+\begin{itemize}
+    \item Django-приложение;
+    \item elasticsearch;
+    \item Создание Makefile для проекта.
+\end{itemize}
+\vspace{1.5\baselineskip}
+\textbf{Тема курсовой:} Онлайн платформа Beauty Academy.
+
+\textbf{Вариант веб-сервера:} nginx. \\
+\textbf{Вариант сервера-приложений:} Django. \\
+\textbf{Вариант базы данных:} PostgreSQL.
+
+\newpage  % ← начинает новую страницу
+
+\section{Веб-сервер}
+
+В проекте используется \textbf{Nginx} в качестве веб-сервера и обратного прокси для Django-приложения Beauty Academy.
+
+\textbf{Конфигурация включает:}
+
+\begin{itemize}
+    \item Проксирование API-запросов к Django-приложению:
+    \begin{itemize}
+        \item Все запросы к \texttt{/api/} направляются на порт 8000, где работает \textbf{runserver}.
+        \item Настроен proxy-pass в конфиге nginx.
+    \end{itemize}
+
+    \item Обслуживание статики:
+    \begin{itemize}
+        \item HTML и изображения отдаются через \texttt{/web/} с директории \texttt{public/}.
+    \end{itemize}
+
+    \item Разделение логики через Nginx:
+    \begin{itemize}
+        \item \texttt{/api/} — для API-запросов.
+        \item \texttt{/web/} — для HTML и фронтенда.
+    \end{itemize}
+
+    \item Сервер слушает на порту 80, проксирует на порт 8000.
+    \item Проверка API через \texttt{curl} и работу через Gunicorn + Nginx.
+\end{itemize}
+
+\vspace{1em}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{photo_2025-05-08_22-56-45.jpg}
+    \caption{Пример моделей Django для проекта Beauty Academy}
+    \label{fig:nginx-config}
+\end{figure}
+
+\section{Сервер-приложений}
+
+Модели данных:
+
+\begin{itemize}
+    \item \textbf{Users} — информация о пользователях (логин, пароль, роль, дата рождения, номер телефона, адрес, и т.д.)
+    \item \textbf{Courses} — курсы на платформе (название, описание, категория, режим, длительность)
+    \item \textbf{Categories} — категории курсов (макияж, уход за кожей, брови и т.д.)
+\end{itemize}
+
+\vspace{1em}
+\noindent \textbf{}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{photo_2025-05-09_01-16-53.jpg}
+    \caption{Models.py}
+    \label{fig:nginx-config}
+\end{figure}
+
+\vspace{1em}
+\textbf{Эндпоинты API:}
+
+\begin{itemize}
+    \item \textbf{/api/profile/} — информация о пользователе (GET, POST)
+    \item \textbf{/api/courses/} — список курсов (GET, POST)
+    \item \textbf{/api/categories/} — категории курсов (GET, POST)
+    \item \textbf{Поиск:} \texttt{/api/profile/?q=студент}
+\end{itemize}
+
+\noindent \textbf{}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{photo_2025-05-09_01-20-51.jpg}
+    \caption{Маршруты API в файле \texttt{urls.py}}
+    \label{fig:nginx-config}
+\end{figure}
+
+\section{База данных и ORM}
+
+\textbf{Конфигурация:}
+
+\begin{itemize}
+    \item Используется PostgreSQL 15.
+    \item Подключение настроено в \texttt{settings.py}:
+    \begin{itemize}
+        \item \texttt{ENGINE = 'django.db.backends.postgresql'}
+        \item \texttt{HOST = 'db'}
+        \item \texttt{USER = 'beauty_user'}
+        \item \texttt{NAME = 'beautyacademy_db'}
+    \end{itemize}
+    \item Подключение проверено через \texttt{psql}, команды \verb|\l| и \verb|\du|.
+    \item Суперпользователь: \texttt{admin / admin12345}
+\end{itemize}
+
+\textbf{Миграции:}
+
+\begin{enumerate}
+    \item Первая миграция создаёт таблицы всех моделей:
+    \begin{itemize}
+        \item \texttt{Profile}, \texttt{Course}, \texttt{Category}, \texttt{CourseSchedule}, \texttt{Attendance}
+    \end{itemize}
+
+    \item Проверка миграций:
+    \begin{itemize}
+        \item \texttt{python manage.py makemigrations}
+        \item \texttt{python manage.py migrate}
+    \end{itemize}
+
+    \item Проверка через PostgreSQL:
+    \begin{itemize}
+        \item \texttt{sudo -u postgres psql -d beautyacademy_db}
+        \item \verb|\dt| — показать все таблицы
+        \item \verb|SELECT * FROM core_profile LIMIT 5;|
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Генерация тестовых данных:}
+
+\begin{itemize}
+    \item Используется через Django-админку: \texttt{/admin/}
+    \item Данные вводились вручную (имя, курс, категория)
+    \item Проверено отображение всех моделей в админке:
+    \begin{itemize}
+        \item \texttt{Profile}, \texttt{Course}, \texttt{Category}, \texttt{CourseSchedule}
+    \end{itemize}
+    \item Использовались реальные названия категорий (например: Макияж, Брови)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{photo_2025-05-09_01-34-24.jpg}
+    \label{fig:nginx-config}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{photo_2025-05-09_01-34-41.jpg}
+    \caption{Миграции и тестовые данные в файле \texttt{admin.py}}
+    \label{fig:nginx-config}
+\end{figure}
+
+\section{Контейнеризация}
+
+Проект развёрнут с использованием \textbf{Docker} и \textbf{Docker Compose}.
+
+\vspace{1em}
+\textbf{Сервисы:}
+
+\begin{enumerate}
+    \item \textbf{db (PostgreSQL)}
+    \begin{itemize}
+        \item Используется официальный образ \texttt{postgres:15}
+        \item Переменные окружения задаются в \texttt{docker-compose.yml}:
+        \begin{itemize}
+            \item \texttt{POSTGRES_DB=beautyacademy\_db}
+            \item \texttt{POSTGRES_USER=beauty\_user}
+            \item \texttt{POSTGRES_PASSWORD=beauty\_pass}
+        \end{itemize}
+        \item Данные сохраняются в том \texttt{pg\_data}
+        \item Настроен \texttt{healthcheck} для проверки доступности сервиса
+    \end{itemize}
+
+    \item \textbf{web (Django)}
+    \begin{itemize}
+        \item Собирается с помощью \texttt{Dockerfile}
+        \item При старте выполняются миграции и создаётся суперпользователь
+        \item Подключается к БД через параметры окружения
+        \item Зависит от PostgreSQL (через \texttt{depends\_on})
+        \item Настроен \texttt{healthcheck}
+    \end{itemize}
+
+    \item \textbf{nginx}
+    \begin{itemize}
+        \item Используется официальный образ \texttt{nginx:latest}
+        \item Проксирует запросы:
+        \begin{itemize}
+            \item \texttt{/api/} \textrightarrow{} web:8000
+            \item \texttt{/web/} \textrightarrow{} директория \texttt{public/}
+        \end{itemize}
+        \item Монтируются конфиги и статика
+        \item Зависит от web-приложения
+        \item Настроен \texttt{healthcheck}
+    \end{itemize}
+\end{enumerate}
+
+\vspace{1em}
+\noindent\textbf{} 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{photo_2025-05-09_01-40-07.jpg}
+    \caption{Фрагмент файла \texttt{docker-compose.yml}, содержащий конфигурацию сервисов базы данных PostgreSQL}
+    \label{fig:nginx-config}
+\end{figure}
+
+\newpage
+\section{Выводы}
+
+В рамках реализации проекта Beauty Academy я научилась разворачивать полноценное веб-приложение с использованием современных технологий. Было освоено построение структуры Django-проекта, реализация моделей, API и связей между сущностями. Я закрепила навыки работы с PostgreSQL, настройки миграций и админ-панели, а также научилась использовать Docker и docker-compose для упрощения запуска и деплоя.
+
+Особое внимание было уделено настройке Nginx как обратного прокси и разделению маршрутов по функциональности. Я научилась реализовывать взаимодействие между сервисами, настраивать зависимости и healthchecks. Полученные знания пригодятся мне как при разработке собственных проектов, так и при работе в команде над большими системами.
+
+\newpage
+\section*{Список литературы}
+
+\begin{enumerate}
+    \item \textit{Официальная документация Django} \\
+    URL: \texttt{https://docs.djangoproject.com/en/5.2/} (дата обращения: 25.04.2025).
+
+    \item \textit{Официальная документация Docker Compose} \\
+    URL: \texttt{https://docs.docker.com/compose/} (дата обращения: 01.05.2025).
+
+    \item \textit{Официальная документация Selenium WebDriver} URL: \texttt{https://www.selenium.dev/documentation/} (дата ораени: 02.05.2025).
+
+    \item \textit{Официальная документация NGINX} \\
+    URL: \texttt{https://nginx.org/en/docs/} (дата обращения: 15.04.2025).
+\end{enumerate}
+
+\end{document}
